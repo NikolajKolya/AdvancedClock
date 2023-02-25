@@ -7,5 +7,7 @@ namespace AdvancedClock.ViewModels
 {
     public class ViewModelBase : ReactiveObject
     {
+
+        private int textbox;
     }
 }

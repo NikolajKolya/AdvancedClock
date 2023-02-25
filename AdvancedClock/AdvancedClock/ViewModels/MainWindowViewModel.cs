@@ -1,4 +1,7 @@
+using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using System;
@@ -6,14 +9,17 @@ using System.Collections.Generic;
 using System.Reactive;
 using System.Text;
 using System.Timers;
-
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
 namespace AdvancedClock.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel: ViewModelBase
     {
         private bool a = true;
-
         private bool b = false;
+
+        public TextBox myTextBox;
         /// <summary>
         /// Время в виде строки
         /// </summary>
@@ -95,9 +101,10 @@ namespace AdvancedClock.ViewModels
         public ReactiveCommand<Unit, Unit> PauseTimer { get; }
 
         public MainWindowViewModel()
-        {
+            {
             ButtonName = "Пауза";
-            TaimerAsString = "00:00";
+            TaimerAsString = "1:00";
+
             // Настраиваем таймер часов
             _clockUpdateTimer = new Timer(500); // Срабатывать раз в 500 миллисекунд
             _clockUpdateTimer.AutoReset = true; // Бесконечно повторяться
@@ -214,7 +221,7 @@ namespace AdvancedClock.ViewModels
                 _stopTimer.Stop();
                 TaimerAsString = (TaimerNumber / 60).ToString() + ":" + (TaimerNumber % 60).ToString();
                 a = true;
-                b= false;
+                b = false;
             }
         }
 
