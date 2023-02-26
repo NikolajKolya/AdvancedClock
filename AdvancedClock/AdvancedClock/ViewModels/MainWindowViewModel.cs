@@ -16,16 +16,14 @@ namespace AdvancedClock.ViewModels
 {
     public class MainWindowViewModel: ViewModelBase
     {
+        /// <summary>
+        /// Начальное количество секунд на таймере
+        /// </summary>
+        private const int TimerSeconds = 60;
+
         private bool a = true;
         private bool b = false;
 
-        public TextBox myTextBox;
-        /// <summary>
-        /// Время в виде строки
-        /// </summary>
-        private string _taimerAsString;
-
-        private int TaimerNumber =  60;
         /// <summary>
         /// Таймер обновления часов
         /// </summary>
@@ -36,7 +34,6 @@ namespace AdvancedClock.ViewModels
         /// </summary>
         private Timer _stopwatchTimer;
 
-        private Timer _stopTimer;
         /// <summary>
         /// Секунды секундомера в виде строки
         /// </summary>
@@ -50,6 +47,25 @@ namespace AdvancedClock.ViewModels
         private TimeSpan _stopwatchInterval;
 
         private string _TimeAsString;
+
+        #region Timer
+
+        /// <summary>
+        /// Сколько осталось на таймере
+        /// </summary>
+        private TimeSpan _timerInterval;
+
+        /// <summary>
+        /// Время таймера в виде строки
+        /// </summary>
+        private string _timerAsString;
+
+        /// <summary>
+        /// Таймер таймера
+        /// </summary>
+        private Timer _stopTimer;
+
+        #endregion
 
         /// <summary>
         /// Публичная переменная с временем в виде строки
@@ -71,8 +87,8 @@ namespace AdvancedClock.ViewModels
 
         public string TaimerAsString
         {
-            get => _taimerAsString;
-            set => this.RaiseAndSetIfChanged(ref _taimerAsString, value);
+            get => _timerAsString;
+            set => this.RaiseAndSetIfChanged(ref _timerAsString, value);
         }
 
         public string ButtonName
@@ -101,10 +117,7 @@ namespace AdvancedClock.ViewModels
         public ReactiveCommand<Unit, Unit> PauseTimer { get; }
 
         public MainWindowViewModel()
-            {
-            ButtonName = "Пауза";
-            TaimerAsString = "1:00";
-
+        {
             // Настраиваем таймер часов
             _clockUpdateTimer = new Timer(500); // Срабатывать раз в 500 миллисекунд
             _clockUpdateTimer.AutoReset = true; // Бесконечно повторяться
@@ -115,7 +128,7 @@ namespace AdvancedClock.ViewModels
             _stopTimer = new Timer(1000);
             _stopTimer.AutoReset = true;
             _stopTimer.Enabled = false;
-            _stopTimer.Elapsed += Taimer;
+            _stopTimer.Elapsed += OnTimerTick;
 
             // Настраиваем секундомер
             _stopwatchInterval = new TimeSpan();
@@ -130,6 +143,13 @@ namespace AdvancedClock.ViewModels
             StopwatchStartCommand = ReactiveCommand.Create(StartStopwatch);
             StopwatchStopCommand = ReactiveCommand.Create(StopStopwatch);
             ResetStopWatchCommand = ReactiveCommand.Create(ResetStopwatch);
+
+            // Настраиваем таймер
+            _timerInterval = new TimeSpan(0, 0, TimerSeconds);
+            ButtonName = "Пауза";
+            TaimerAsString = "1:00";
+
+            // Связываем команды таймера
             StartTimer = ReactiveCommand.Create(TaimerStarter);
             PauseTimer = ReactiveCommand.Create(PauseTaimer);
         }
@@ -175,16 +195,17 @@ namespace AdvancedClock.ViewModels
             FormatStopwatchTimeSpan();
         }
 
-        private void Taimer(object? sender, ElapsedEventArgs e)
+        /// <summary>
+        /// Тик таймера
+        /// </summary>
+        private void OnTimerTick(object? sender, ElapsedEventArgs e)
         {
-            TaimerNumber -= 1;
-            if (TaimerNumber < 0)
+            _timerInterval -= new TimeSpan(0, 0, 1);
+            DisplayTimerValue();
+
+            if (_timerInterval.TotalSeconds == 0)
             {
-                _stopTimer.Stop();
-            }
-            else
-            {
-                TaimerAsString = (TaimerNumber / 60).ToString() + ":" + (TaimerNumber % 60).ToString();
+
             }
         }
 
@@ -216,14 +237,22 @@ namespace AdvancedClock.ViewModels
             }
             else if(b)
             {
-                TaimerNumber = 60;
+                _timerInterval = new TimeSpan(0, 0, TimerSeconds);
+                DisplayTimerValue();
+
                 ButtonName = "Пауза";
                 _stopTimer.Stop();
-                TaimerAsString = (TaimerNumber / 60).ToString() + ":" + (TaimerNumber % 60).ToString();
                 a = true;
                 b = false;
             }
         }
 
+        /// <summary>
+        /// Отобразить показания таймера
+        /// </summary>
+        private void DisplayTimerValue()
+        {
+            TaimerAsString = _timerInterval.ToString();
+        }
     }
 }
