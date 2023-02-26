@@ -91,6 +91,17 @@ namespace AdvancedClock.ViewModels
             set => this.RaiseAndSetIfChanged(ref _timerColor, value);
         }
 
+        private string _timerIntervalValueAsString;
+
+        /// <summary>
+        /// Интервал таймера, указанный пользователем
+        /// </summary>
+        public string TimerIntervalValueAsString
+        {
+            get => _timerIntervalValueAsString;
+            set => this.RaiseAndSetIfChanged(ref _timerIntervalValueAsString, value);
+        }
+
         #endregion
 
         /// <summary>
@@ -249,6 +260,7 @@ namespace AdvancedClock.ViewModels
         private void ResetTimer()
         {
             _timerInterval = new TimeSpan(0, 0, TimerSeconds);
+            TimerIntervalValueAsString = _timerInterval.TotalSeconds.ToString();
             TimerColor = NormalTimerColor;
             DisplayTimerValue();
         }
@@ -264,7 +276,32 @@ namespace AdvancedClock.ViewModels
 
         private void TaimerStarter()
         {
-            if ((_timerState == TimerState.Stopped) || (_timerState == TimerState.Paused))
+            if (_timerState == TimerState.Stopped)
+            {
+                int numberOfSeconds = 0;
+                try
+                {
+                    numberOfSeconds = int.Parse(TimerIntervalValueAsString);
+                }
+                catch(Exception)
+                {
+                    var errorMessageBox = MessageBox.Avalonia.MessageBoxManager
+                        .GetMessageBoxStandardWindow("Error", "Вы ввели не число!");
+                    errorMessageBox.Show();
+
+                    return;
+                }
+                
+                _timerInterval = new TimeSpan(0, 0, numberOfSeconds);
+
+                _stopTimer.Start();
+
+                SetTimerState(TimerState.Running);
+
+                return;
+            }
+
+            if (_timerState == TimerState.Paused)
             {
                 _stopTimer.Start();
 
