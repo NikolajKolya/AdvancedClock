@@ -152,8 +152,7 @@ namespace AdvancedClock.ViewModels
             _timerInterval = new TimeSpan(0, 0, TimerSeconds);
             DisplayTimerValue();
 
-            TimerSecondButtonName = "Пауза";
-
+            SetTimerState(TimerState.Stopped);
 
             // Связываем команды таймера
             StartTimer = ReactiveCommand.Create(TaimerStarter);
@@ -229,8 +228,8 @@ namespace AdvancedClock.ViewModels
             if ((_timerState == TimerState.Stopped) || (_timerState == TimerState.Paused))
             {
                 _stopTimer.Start();
-                _timerState = TimerState.Running;
-                TimerSecondButtonName = "Пауза";
+
+                SetTimerState(TimerState.Running);
 
                 return;
             }
@@ -246,8 +245,8 @@ namespace AdvancedClock.ViewModels
             if (_timerState == TimerState.Running)
             {
                 _stopTimer.Stop();
-                TimerSecondButtonName = "Сброс";
-                _timerState = TimerState.Paused;
+
+                SetTimerState(TimerState.Paused);
                 return;
             }
 
@@ -256,9 +255,7 @@ namespace AdvancedClock.ViewModels
                 _timerInterval = new TimeSpan(0, 0, TimerSeconds);
                 DisplayTimerValue();
 
-                TimerSecondButtonName = "Пауза";
-
-                _timerState = TimerState.Stopped;
+                SetTimerState(TimerState.Stopped);
                 return;
             }
         }
@@ -269,6 +266,36 @@ namespace AdvancedClock.ViewModels
         private void DisplayTimerValue()
         {
             TaimerAsString = _timerInterval.ToString();
+        }
+
+        /// <summary>
+        /// Возвращает надпись на правой кнопке
+        /// </summary>
+        private string GetTimerSecondButtonName()
+        {
+            switch(_timerState)
+            {
+                case TimerState.Stopped:
+                    return "Пауза";
+
+                case TimerState.Running:
+                    return "Пауза";
+
+                case TimerState.Paused:
+                    return "Сброс";
+
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        /// <summary>
+        /// Устанавливает состояние таймера
+        /// </summary>
+        private void SetTimerState(TimerState newState)
+        {
+            _timerState = newState;
+            TimerSecondButtonName = GetTimerSecondButtonName();
         }
     }
 }
