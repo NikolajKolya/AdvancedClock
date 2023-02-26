@@ -12,6 +12,8 @@ using System.Timers;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using AdvancedClock.Enums;
+
 namespace AdvancedClock.ViewModels
 {
     public class MainWindowViewModel: ViewModelBase
@@ -20,9 +22,6 @@ namespace AdvancedClock.ViewModels
         /// Начальное количество секунд на таймере
         /// </summary>
         private const int TimerSeconds = 60;
-
-        private bool a = true;
-        private bool b = false;
 
         /// <summary>
         /// Таймер обновления часов
@@ -39,7 +38,7 @@ namespace AdvancedClock.ViewModels
         /// </summary>
         private string _stopwatchAsString;
 
-        private string _ButtonName;
+        private string _timerSecopndButtonName;
 
         /// <summary>
         /// Секунды секундомера
@@ -64,6 +63,11 @@ namespace AdvancedClock.ViewModels
         /// Таймер таймера
         /// </summary>
         private Timer _stopTimer;
+
+        /// <summary>
+        /// Состояние таймера
+        /// </summary>
+        private TimerState _timerState = TimerState.Stopped;
 
         #endregion
 
@@ -91,10 +95,10 @@ namespace AdvancedClock.ViewModels
             set => this.RaiseAndSetIfChanged(ref _timerAsString, value);
         }
 
-        public string ButtonName
+        public string TimerSecondButtonName
         {
-            get => _ButtonName;
-            set => this.RaiseAndSetIfChanged(ref _ButtonName, value);
+            get => _timerSecopndButtonName;
+            set => this.RaiseAndSetIfChanged(ref _timerSecopndButtonName, value);
         }
 
         /// <summary>
@@ -146,8 +150,10 @@ namespace AdvancedClock.ViewModels
 
             // Настраиваем таймер
             _timerInterval = new TimeSpan(0, 0, TimerSeconds);
-            ButtonName = "Пауза";
-            TaimerAsString = "1:00";
+            DisplayTimerValue();
+
+            TimerSecondButtonName = "Пауза";
+
 
             // Связываем команды таймера
             StartTimer = ReactiveCommand.Create(TaimerStarter);
@@ -220,30 +226,40 @@ namespace AdvancedClock.ViewModels
 
         private void TaimerStarter()
         {
-            _stopTimer.Start();
-            ButtonName = "Пауза";
-            a = true;
-            b = true;
+            if ((_timerState == TimerState.Stopped) || (_timerState == TimerState.Paused))
+            {
+                _stopTimer.Start();
+                _timerState = TimerState.Running;
+                TimerSecondButtonName = "Пауза";
+
+                return;
+            }
         }
 
         private void PauseTaimer()
         {
-            if (a && b)
+            if (_timerState == TimerState.Stopped)
+            {
+                return;
+            }
+
+            if (_timerState == TimerState.Running)
             {
                 _stopTimer.Stop();
-                ButtonName = "Сброс";
-                a = false;
-                b = true;
+                TimerSecondButtonName = "Сброс";
+                _timerState = TimerState.Paused;
+                return;
             }
-            else if(b)
+
+            if (_timerState == TimerState.Paused)
             {
                 _timerInterval = new TimeSpan(0, 0, TimerSeconds);
                 DisplayTimerValue();
 
-                ButtonName = "Пауза";
-                _stopTimer.Stop();
-                a = true;
-                b = false;
+                TimerSecondButtonName = "Пауза";
+
+                _timerState = TimerState.Stopped;
+                return;
             }
         }
 
