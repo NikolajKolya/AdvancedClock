@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using AdvancedClock.Enums;
+using Avalonia.Media;
 
 namespace AdvancedClock.ViewModels
 {
@@ -21,7 +22,17 @@ namespace AdvancedClock.ViewModels
         /// <summary>
         /// Начальное количество секунд на таймере
         /// </summary>
-        private const int TimerSeconds = 60;
+        private const int TimerSeconds = 10;
+
+        /// <summary>
+        /// Обычный цвет таймера
+        /// </summary>
+        private readonly IBrush NormalTimerColor = new SolidColorBrush(new Color(255, 0, 0, 0));
+
+        /// <summary>
+        /// Таймер, привлекающий внимание
+        /// </summary>
+        private readonly IBrush WarningTimerColor = new SolidColorBrush(new Color(255, 255, 0, 0));
 
         /// <summary>
         /// Таймер обновления часов
@@ -68,6 +79,17 @@ namespace AdvancedClock.ViewModels
         /// Состояние таймера
         /// </summary>
         private TimerState _timerState = TimerState.Stopped;
+
+        private IBrush _timerColor;
+
+        /// <summary>
+        /// Цвет текста таймера
+        /// </summary>
+        public IBrush TimerColor
+        {
+            get => _timerColor;
+            set => this.RaiseAndSetIfChanged(ref _timerColor, value);
+        }
 
         #endregion
 
@@ -149,8 +171,7 @@ namespace AdvancedClock.ViewModels
             ResetStopWatchCommand = ReactiveCommand.Create(ResetStopwatch);
 
             // Настраиваем таймер
-            _timerInterval = new TimeSpan(0, 0, TimerSeconds);
-            DisplayTimerValue();
+            ResetTimer();
 
             SetTimerState(TimerState.Stopped);
 
@@ -208,10 +229,28 @@ namespace AdvancedClock.ViewModels
             _timerInterval -= new TimeSpan(0, 0, 1);
             DisplayTimerValue();
 
+            if (_timerInterval.TotalSeconds <= 5)
+            {
+                TimerColor = WarningTimerColor;
+            }
+
             if (_timerInterval.TotalSeconds == 0)
             {
+                _stopTimer.Stop();
+                SetTimerState(TimerState.Stopped);
 
+                ResetTimer();
             }
+        }
+
+        /// <summary>
+        /// Сброс таймера в начальное положение
+        /// </summary>
+        private void ResetTimer()
+        {
+            _timerInterval = new TimeSpan(0, 0, TimerSeconds);
+            TimerColor = NormalTimerColor;
+            DisplayTimerValue();
         }
 
         /// <summary>
@@ -252,10 +291,8 @@ namespace AdvancedClock.ViewModels
 
             if (_timerState == TimerState.Paused)
             {
-                _timerInterval = new TimeSpan(0, 0, TimerSeconds);
-                DisplayTimerValue();
-
                 SetTimerState(TimerState.Stopped);
+                ResetTimer();
                 return;
             }
         }
