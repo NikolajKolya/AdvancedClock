@@ -56,7 +56,15 @@ namespace AdvancedClock.ViewModels
         /// </summary>
         private TimeSpan _stopwatchInterval;
 
-        private string _TimeAsString;
+        /// <summary>
+        /// Текущее время как строка
+        /// </summary>
+        private string _timeAsString;
+
+        /// <summary>
+        /// Текущее время (как тип DateTime)
+        /// </summary>
+        private DateTime _time;
 
         #region Timer
 
@@ -109,8 +117,17 @@ namespace AdvancedClock.ViewModels
         /// </summary>
         public string TimeAsString
         {
-            get => _TimeAsString;
-            set => this.RaiseAndSetIfChanged(ref _TimeAsString, value);
+            get => _timeAsString;
+            set => this.RaiseAndSetIfChanged(ref _timeAsString, value);
+        }
+
+        /// <summary>
+        /// Публичная переменная с временем
+        /// </summary>
+        public DateTime Time
+        {
+            get => _time;
+            set => this.RaiseAndSetIfChanged(ref _time, value);
         }
 
         /// <summary>
@@ -196,6 +213,7 @@ namespace AdvancedClock.ViewModels
         /// </summary>
         private void OnClockUpdateTimer(Object source, ElapsedEventArgs e)
         {
+            Time = DateTime.Now;
             TimeAsString = DateTime.Now.ToLongTimeString();
         }
         

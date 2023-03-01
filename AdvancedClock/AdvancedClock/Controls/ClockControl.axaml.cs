@@ -107,12 +107,38 @@ namespace AdvancedClock.Controls
 
         private double _clockRadius;
 
+        /// <summary>
+        /// Свойство управления красным огнём
+        /// </summary>
+        public static readonly AttachedProperty<DateTime> CurrentTimeProperty
+            = AvaloniaProperty.RegisterAttached<ClockControl, Interactive, DateTime>(nameof(CurrentTime));
+
+        /// <summary>
+        /// Какое сейчас время на часах?
+        /// </summary>
+        public DateTime CurrentTime
+        {
+            get { return GetValue(CurrentTimeProperty); }
+            set { SetValue(CurrentTimeProperty, value); }
+        }
+
         public ClockControl()
         {
             InitializeComponent();
 
+            // Подписываемся на изменение времени
+            CurrentTimeProperty.Changed.Subscribe(x => HandleCurrentTimeChanged(x.Sender, x.NewValue.GetValueOrDefault<DateTime>()));
+
             // Подписываемся на изменение свойств окна
             PropertyChanged += OnPropertyChangedListener;
+        }
+
+        /// <summary>
+        /// Метод вызывается когда меняется время, которое мы хотим отобразить
+        /// </summary>
+        private void HandleCurrentTimeChanged(IAvaloniaObject sender, DateTime dateTime)
+        {
+            InvalidateVisual();
         }
 
         /// <summary>
@@ -159,9 +185,9 @@ namespace AdvancedClock.Controls
                 _clockRadius);
 
             // Стрелки
-            DrawHoursHand(context, 9);
-            DrawMinutesHand(context, 37);
-            DrawSecondsHand(context, 15);
+            DrawHoursHand(context, CurrentTime.Hour);
+            DrawMinutesHand(context, CurrentTime.Minute);
+            DrawSecondsHand(context, CurrentTime.Second);
 
             for (int i = 1; i <= 12; i++)
             {
@@ -280,5 +306,6 @@ namespace AdvancedClock.Controls
 
             DrawHandRaw(context, new Point(x, y), HoursHandThikness);
         }
+
     }
 }
