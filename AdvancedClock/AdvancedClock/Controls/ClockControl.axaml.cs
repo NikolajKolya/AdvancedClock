@@ -17,6 +17,7 @@ using System.Timers;
 //using Avalonia;
 using Timer = System.Threading.Timer;
 using System.Security.Cryptography;
+using Avalonia.Media.Imaging;
 
 namespace AdvancedClock.Controls
 {
@@ -53,11 +54,6 @@ namespace AdvancedClock.Controls
         /// Множитель радуиса часов (сторона * на множитель = радиус часов)
         /// </summary>
         private const double RadiusMultiplier = 0.45;
-
-        /// <summary>
-        /// Фон часов
-        /// </summary>
-        private readonly Color ClockBackgroundColor = new Color(255, 230, 230, 255);
 
         /// <summary>
         /// Рисуем часы этим цветом
@@ -97,6 +93,7 @@ namespace AdvancedClock.Controls
         #endregion
 
         private int _minSide;
+        private int _maxSide;
 
         private double _scaling;
 
@@ -107,8 +104,10 @@ namespace AdvancedClock.Controls
 
         private double _clockRadius;
 
+        private Bitmap _background;
+
         /// <summary>
-        /// Свойство управления красным огнём
+        /// Свойство управления временем на часах
         /// </summary>
         public static readonly AttachedProperty<DateTime> CurrentTimeProperty
             = AvaloniaProperty.RegisterAttached<ClockControl, Interactive, DateTime>(nameof(CurrentTime));
@@ -125,6 +124,9 @@ namespace AdvancedClock.Controls
         public ClockControl()
         {
             InitializeComponent();
+
+            // Загружаем фон из ресурсов
+            _background = new Bitmap(@"Resources/clock.png");
 
             // Подписываемся на изменение времени
             CurrentTimeProperty.Changed.Subscribe(x => HandleCurrentTimeChanged(x.Sender, x.NewValue.GetValueOrDefault<DateTime>()));
@@ -166,6 +168,7 @@ namespace AdvancedClock.Controls
             _centerPoint = new Point(_width / 2.0, _height / 2.0);
 
             _minSide = Math.Min(_width, _height);
+            _maxSide = Math.Max(_width, _height);
             _clockRadius = RadiusMultiplier * _minSide;
         }
 
@@ -177,8 +180,29 @@ namespace AdvancedClock.Controls
         {
             base.Render(context); // Обратиться к предку и дать предку нарисовать свои части
 
+            // Фон
+            var backgroundShift = (_maxSide - _minSide) / 2.0;
+            double backgroundShiftX;
+            double backgroundShiftY;
+
+            if (_width > _height)
+            {
+                backgroundShiftX = backgroundShift;
+                backgroundShiftY = 0;
+            }
+            else
+            {
+                backgroundShiftX = 0;
+                backgroundShiftY = backgroundShift;
+            }
+
+            context.DrawImage(_background,
+                new Rect(0, 0, _background.Size.Width, _background.Size.Height),
+                new Rect(backgroundShiftX, backgroundShiftY, _minSide, _minSide),
+                Avalonia.Visuals.Media.Imaging.BitmapInterpolationMode.HighQuality);
+
             // Циферблат
-            context.DrawEllipse(new SolidColorBrush(ClockBackgroundColor),
+            context.DrawEllipse(new SolidColorBrush(Colors.Transparent), // Прозрачный фон
                 new Pen(new SolidColorBrush(ClockForegroundColor)),
                 _centerPoint,
                 _clockRadius,
