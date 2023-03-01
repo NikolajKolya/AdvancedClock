@@ -25,9 +25,19 @@ namespace AdvancedClock.Controls
         #region Constants
 
         /// <summary>
-        /// Длина до конца засечки как доля от радиуса часов
+        /// Длина до начала засечки как доля от радиуса часов
         /// </summary>
-        private const double HandLength = 0.75;
+        private const double HandBeginRadius = 0.65;
+
+        /// <summary>
+        /// Длина засечки
+        /// </summary>
+        private const double HandLength = 0.1;
+
+        /// <summary>
+        /// Радиус до цифр
+        /// </summary>
+        private const double NumbersRadius = 0.90;
 
         /// <summary>
         /// Толщина засечки (в пикселях)
@@ -86,7 +96,7 @@ namespace AdvancedClock.Controls
 
         #endregion
 
-        int minSide;
+        private int _minSide;
 
         private double _scaling;
 
@@ -129,8 +139,8 @@ namespace AdvancedClock.Controls
 
             _centerPoint = new Point(_width / 2.0, _height / 2.0);
 
-            minSide = Math.Min(_width, _height);
-            _clockRadius = RadiusMultiplier * minSide;
+            _minSide = Math.Min(_width, _height);
+            _clockRadius = RadiusMultiplier * _minSide;
         }
 
         /// <summary>
@@ -152,9 +162,10 @@ namespace AdvancedClock.Controls
             DrawHoursHand(context, 9);
             DrawMinutesHand(context, 37);
             DrawSecondsHand(context, 15);
-            for (double i = 1; i <= 12; i++)
+
+            for (int i = 1; i <= 12; i++)
             {
-                DrawNumbers(context, i);
+                DrawNumbersAndLines(context, i);
             }
         }
 
@@ -184,11 +195,11 @@ namespace AdvancedClock.Controls
         /// <param name="context"></param>
         /// <param name="hours"></param>
         /// <param name="Number"></param>
-        private void DrawNumber(DrawingContext context, string hours, Point Number)
+        private void DrawNumbers(DrawingContext context, string hours, Point Number)
         {
             context.DrawText(new SolidColorBrush(ClockForegroundColor),
             Number,
-            new FormattedText(hours, Typeface.Default, minSide / 18, 0, TextWrapping.NoWrap, new Size(double.MinValue, double.MaxValue)));
+            new FormattedText(hours, Typeface.Default, _minSide / 18, 0, TextWrapping.NoWrap, new Size(double.MinValue, double.MaxValue)));
         }
 
         /// <summary>
@@ -196,48 +207,39 @@ namespace AdvancedClock.Controls
         /// </summary>
         /// <param name="context"></param>
         /// <param name="hours"></param>
-        private void DrawNumbers(DrawingContext context, double hours)
+        private void DrawNumbersAndLines(DrawingContext context, int hours)
         {
-            ///<summary>
-            /// Растояние до конца засечки
-            /// </summary>
-            var length1 = _clockRadius * HandLength;
+            // Растояние до начала засечки
+            var length1 = _clockRadius * HandBeginRadius;
 
-            ///<summary>
-            /// Растояние до начала засечки
-            /// </summary>
-            var length2 = _clockRadius * (HandLength - 0.1);
+            // Растояние до конца засечки
+            var length2 = _clockRadius * (HandBeginRadius + HandLength);
 
-            ///<summary>
-            /// Растояние до номеров
-            /// </summary>
-            var length3 = _clockRadius * (HandLength + 0.14);
+            // Растояние до номеров
+            var length3 = _clockRadius * NumbersRadius;
 
-            var degrees = (hours / 12) * 2.0 * Math.PI;
+            var degrees = (hours / 12.0) * 2.0 * Math.PI;
 
-            ///<summary>
-            /// Точки начала и конца засечки
-            /// </summary>
-            var x = Math.Sin(degrees) * length1 + _centerPoint.X;
-            var y = -1 * Math.Cos(degrees) * length1 + _centerPoint.Y;
-            var a = Math.Sin(degrees) * length2 + _centerPoint.X;
-            var b = -1 * Math.Cos(degrees) * length2 + _centerPoint.Y;
+            // Расчёт синусов-косинусов
+            var sinDegrees = Math.Sin(degrees);
+            var invertedCosDegrees = -1 * Math.Cos(degrees);
 
-            ///<summary>
-            /// Точка на которой находится номер
-            /// </summary>
+            // Точки начала и конца засечки
+            var x = sinDegrees * length1 + _centerPoint.X;
+            var y = invertedCosDegrees * length1 + _centerPoint.Y;
+
+            var a = sinDegrees * length2 + _centerPoint.X;
+            var b = invertedCosDegrees * length2 + _centerPoint.Y;
+
+            // Точка на которой находится номер
             var xNumber = Math.Sin(degrees) * length3 + _centerPoint.X * CoefficientOfNumbers;
-            var yNumber = -1 * Math.Cos(degrees) * length3 + _centerPoint.Y * CoefficientOfNumbers;
+            var yNumber = invertedCosDegrees * length3 + _centerPoint.Y * CoefficientOfNumbers;
 
-            ///<summary>
-            /// Вызов метода который рисует засечки
-            /// </summary>
-            DrawLines(context, new Point(x, y), HandThikness , new Point(a, b));
+            // Вызов метода который рисует засечки
+            DrawLines(context, new Point(x, y), HandThikness, new Point(a, b));
 
-            ///<summary>
-            /// Вызов метода который рисует Номера
-            /// </summary>
-            DrawNumber(context, hours.ToString(), new Point(xNumber, yNumber));
+            // Вызов метода который рисует Номера
+            DrawNumbers(context, hours.ToString(), new Point(xNumber, yNumber));
         }
 
         /// <summary>
